@@ -419,6 +419,10 @@ int b43_generate_txhdr(struct b43_wldev *dev,
 	if (!phy->gmode)
 		mac_ctl |= B43_TXH_MAC_5GHZ;
 
+	/* Force ACK timeout for 80211aa frames */
+	if(ieee80211_fragment_is_80211aa((void*) fragment_data,	fragment_len))
+		mac_ctl |= B43_TXH_MAC_ACK;
+
 	/* Overwrite rates[0].count to make the retry calculation
 	 * in the tx status easier. need the actual retry limit to
 	 * detect whether the fallback rate was used.

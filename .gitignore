@@ -105,6 +105,7 @@ all.config
 
 # Only take our changes
 /*
-!drivers/net/wireless/broadcom/b43
+#!drivers/net/wireless/broadcom/b43/*
+drivers/net/wireless/broadcom/b43/*
 include/net/mac80211.h
 net/mac80211/util.c

@@ -3601,9 +3601,9 @@ static void b43_tx_work(struct work_struct *work)
 	struct b43_wl *wl = container_of(work, struct b43_wl, tx_work);
 	struct b43_wldev *dev;
 	struct sk_buff *skb;
-	struct sk_buff *skb;
 	struct sk_buff *skb_c;
 	int queue_num;
+	int i;
 	int err = 0;
 
 	mutex_lock(&wl->mutex);
@@ -3636,7 +3636,7 @@ static void b43_tx_work(struct work_struct *work)
 			      else
 				err = b43_dma_tx(dev, skb_c);
 
-#ifdef 80211aa_DEBUG
+#ifdef IEEE80211AA_DEBUG
 			      dev->tx_frame_80211aa++;
 #endif
 			      if (unlikely(err))

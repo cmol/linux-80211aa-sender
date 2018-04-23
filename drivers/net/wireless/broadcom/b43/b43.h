@@ -823,7 +823,7 @@ enum {
 					} while (0)
 
 /* 80211aa define */
-#define 80211aa_DEBUG 1
+#define IEEE80211AA_DEBUG 1
 /* the offset of the destination mac address into skb->data */
 #define DST_MAC_ADDR_OFF 4
 /* the maximum number of associated clients */
@@ -902,7 +902,7 @@ struct b43_wldev {
 	unsigned int tx_count;
 	unsigned int rx_count;
 #endif
-#ifdef 80211aa_DEBUG
+#ifdef IEEE80211AA_DEBUG
 	/* these variable are used only for debugging
 	 * purpose */
 	unsigned int tx_frame_80211aa;

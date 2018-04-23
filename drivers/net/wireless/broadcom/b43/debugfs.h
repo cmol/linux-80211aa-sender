@@ -53,6 +53,10 @@ struct b43_dfsentry {
 	struct b43_dfs_file file_restart;
 	struct b43_dfs_file file_loctls;
 
+	/* 802.11aa communication structs */
+	struct b43_dfs_file file_spec_stat;
+	struct b43_dfs_file file_associated_stas;
+
 	struct b43_txstatus_log txstatlog;
 
 	/* The cached address for the next mmio16read file read */

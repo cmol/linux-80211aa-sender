@@ -76,6 +76,105 @@ struct b43_dfs_file *fops_to_dfs_file(struct b43_wldev *dev,
 #define B43_MAX_SHM_ROUTING	4
 #define B43_MAX_SHM_ADDR	0xFFFF
 
+
+static int associated_stas_write_file(struct b43_wldev *dev,
+				      const char *buf, size_t bufsize)
+{
+	int i;
+
+	/* now we do not check if the address is well formatted,
+	 *, maybe in the future */
+	u8 addr[6];
+
+	sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+			&addr[0], &addr[1], &addr[2],
+			&addr[3], &addr[4], &addr[5]);
+
+	for(i = 0; i <= last_client_index; i++) {
+		if(addr[0] == assoc_client[i][0] &&
+		   addr[1] == assoc_client[i][1] &&
+		   addr[2] == assoc_client[i][2] &&
+		   addr[3] == assoc_client[i][3] &&
+		   addr[4] == assoc_client[i][4] &&
+		   addr[5] == assoc_client[i][5]) {
+			break;
+		}
+	}
+
+	if(i <= last_client_index) {
+		printk("The client %02x:%02x:%02x:%02x:%02x:%02x is already
+				present\n",
+				addr[0],addr[1],addr[2],addr[3],addr[4],
+				addr[5]);
+		return -1;
+	}
+
+	if(last_client_index+1 => NUM_STAS) {
+		printk("Reached the maximum number for the associated client,
+				cannot add %02x:%02x:%02x:%02x:%02x:%02x\n",
+				addr[0],addr[1],addr[2],addr[3],addr[4],
+				addr[5]);
+		return -1;
+	}
+
+	last_client_index++;
+	for(i=0; i < ETH_ALEN; i++)
+		assoc_client[last_client_index][i] = addr[i];
+
+	printk("New client associated:\t%02x:%02x:%02x:%02x:%02x:%02x\n",
+			assoc_client[last_client_index][0],
+			assoc_client[last_client_index][1],
+			assoc_client[last_client_index][2],
+			assoc_client[last_client_index][3],
+			assoc_client[last_client_index][4],
+			assoc_client[last_client_index][5]);
+
+	return 0;
+}
+
+static ssize_i associated_stas_read_file(struct b43_wldev *dev, char *buf,
+		size_t bufsize) {
+	ssize_t count = 0;
+	unsigned long flags;
+	int i;
+
+	// Lock spinlock
+	spin_lock_irqsave(&dev->wl->hardirq_lock, flags);
+
+	for(i = 0; i <= last_client_index; i++) {
+		fappend("%02x:%02x:%02x:%02x:%02x:%02x\n",
+				assoc_client[i][0], assoc_client[i][1],
+				assoc_client[i][2], assoc_client[i][3],
+				assoc_client[i][4], assoc_client[i][5]);
+	}
+
+	// Unlock the spinlock
+	spin_unlock_irqrestore(&dev->wl->hardirq_lock, flags);
+
+	return count;
+}
+
+static ssize_t spec_sttat_read_file(struct b43_wldev *dev, char *buf,
+		size_t bufsize) {
+	ssize_t count = 0;
+
+	unsigned long flags;
+	unsigned int high, low, qos_queue;
+
+	// Lock spinlock
+	spin_lock_irqsave(&dev->wl->hardirq_lock, flags);
+
+	// Driver level
+	fappend("Driver level:\n\n");
+	fappend("80211aa frames sent: %d\n", dev->tx_frame_80211aa);
+	fappend("80211aa frames received: %d\n", dev->rx_frame_80211aa);
+
+	// Unlock the spinlock
+	spin_unlock_irqrestore(&dev->wl->hardirq_lock, flags);
+
+	return count;
+}
+
 static ssize_t shm16read__read_file(struct b43_wldev *dev,
 				    char *buf, size_t bufsize)
 {
@@ -95,7 +194,7 @@ static ssize_t shm16read__read_file(struct b43_wldev *dev,
 	return count;
 }
 
-static int shm16read__write_file(struct b43_wldev *dev,
+write_file(struct b43_wldev *dev,
 				 const char *buf, size_t count)
 {
 	unsigned int routing, addr;
@@ -641,6 +740,16 @@ B43_DEBUGFS_FOPS(txstat, txstat_read_file, NULL);
 B43_DEBUGFS_FOPS(restart, NULL, restart_write_file);
 B43_DEBUGFS_FOPS(loctls, loctls_read_file, NULL);
 
+/* Our debugfs with special statistics */
+/* B43_DEBUGFS_FOPS(debugs_fs_file,
+ *  * function_called_on_reading,
+ *   * function_called_on_writing); */
+
+B43_DEBUGFS_FOPS(spec_stat, spec_stat_read_file, NULL);
+/* Our debugfs with associated stations */
+B43_DEBUGFS_FOPS(associated_stas, associated_stas_read_file
+		, associated_stas_write_file);
+
 
 bool b43_debug(struct b43_wldev *dev, enum b43_dyndbg feature)
 {
@@ -763,6 +872,12 @@ void b43_debugfs_add_device(struct b43_wldev *dev)
 	ADD_FILE(restart, 0200);
 	ADD_FILE(loctls, 0400);
 
+	/* Our debugfs with special statistics */
+	/* ADD_FILE(debufs_fs_file, permissions_definition) */
+	ADD_FILE(spec_stat, 0600);
+	/* Our debugfs with associated stations */
+	ADD_FILE(associated_stas, 0700);
+
 #undef ADD_FILE
 
 	b43_add_dynamic_debug(dev);
@@ -790,6 +905,11 @@ void b43_debugfs_remove_device(struct b43_wldev *dev)
 	debugfs_remove(e->file_txstat.dentry);
 	debugfs_remove(e->file_restart.dentry);
 	debugfs_remove(e->file_loctls.dentry);
+	/* Our debugfs with special statistics */
+	/* debugfs_remove(e->debug_fs_file.dentry); */
+	debugfs_remove(e->file_spec_stat.dentry);
+	/* Our debugfs with associated stations */
+	debugfs_remove(e->file_associated_stas.dentry);
 
 	debugfs_remove(e->subdir);
 	kfree(e->txstatlog.log);

@@ -383,8 +383,13 @@ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
 
 /* the double array that contains the all mac address of associated station */
 u8 assoc_client[NUM_STAS][ETH_ALEN];
+
+
 /* the index of last associated station, we keep the count */
 int last_client_index = -1;
+
+/* Should we define the assoc_clients? (no: 0, yes: !0 */
+int assoc_client_init = 1;
 
 static int b43_ratelimit(struct b43_wl *wl)
 {
@@ -3605,6 +3610,61 @@ static void b43_tx_work(struct work_struct *work)
 	int queue_num;
 	int i;
 	int err = 0;
+
+	if(assoc_client_init != 0) {
+		assoc_client_init = 0;
+		/* As the clients are fixed for now just hardcode them into the
+		 * module */
+		/* b8:ee:65:2e:1f:e5 */
+		assoc_client[0][1] = 0xee;
+		assoc_client[0][2] = 0x65;
+		assoc_client[0][3] = 0x2e;
+		assoc_client[0][4] = 0x1f;
+		assoc_client[0][5] = 0xe5;
+		/* 2c:d0:5a:00:04:37 */
+		assoc_client[1][0] = 0x2c;
+		assoc_client[1][1] = 0xd0;
+		assoc_client[1][2] = 0x5a;
+		assoc_client[1][3] = 0x00;
+		assoc_client[1][4] = 0x04;
+		assoc_client[1][5] = 0x37;
+		/* 20:16:d8:ef:28:38 */
+		assoc_client[2][0] = 0x20;
+		assoc_client[2][1] = 0x16;
+		assoc_client[2][2] = 0xd8;
+		assoc_client[2][3] = 0xef;
+		assoc_client[2][4] = 0x28;
+		assoc_client[2][5] = 0x38;
+		/* 18:cf:5e:03:e9:a0 */
+		assoc_client[3][0] = 0x18;
+		assoc_client[3][1] = 0xcf;
+		assoc_client[3][2] = 0x5e;
+		assoc_client[3][3] = 0x03;
+		assoc_client[3][4] = 0xe9;
+		assoc_client[3][5] = 0xa0;
+		/* 2c:d0:5a:00:08:f4 */
+		assoc_client[4][0] = 0x2c;
+		assoc_client[4][1] = 0xd0;
+		assoc_client[4][2] = 0x5a;
+		assoc_client[4][3] = 0x00;
+		assoc_client[4][4] = 0x08;
+		assoc_client[4][5] = 0xf4;
+		/* 2c:d0:5a:00:08:ea */
+		assoc_client[5][0] = 0x2c;
+		assoc_client[5][1] = 0xd0;
+		assoc_client[5][2] = 0x5a;
+		assoc_client[5][3] = 0x00;
+		assoc_client[5][4] = 0x08;
+		assoc_client[5][5] = 0xea;
+		/* 18:cf:5e:03:fb:05 */
+		assoc_client[6][0] = 0x18;
+		assoc_client[6][1] = 0xcf;
+		assoc_client[6][2] = 0x5e;
+		assoc_client[6][3] = 0x03;
+		assoc_client[6][4] = 0xfb;
+		assoc_client[6][5] = 0x05;
+
+	}
 
 	mutex_lock(&wl->mutex);
 	dev = wl->current_dev;

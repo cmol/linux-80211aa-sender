@@ -3460,18 +3460,17 @@ EXPORT_SYMBOL(ieee80211_txq_get_depth);
 bool ieee80211_fragment_is_80211aa(void* _buff, int len)
 {
        u8* buff = (u8*) _buff;
-       if(len >= 60 &&
+       if(len >= 80 &&
                // we have enough bytes to make the following checks
-                       buff[24] == 0xAA && // normal LLC
-                       buff[25] == 0xAA &&
-                       buff[30] == 0x08 && // carrying IP
-                       buff[31] == 0x00 &&
-                       buff[32] == 0x45 )
+                       buff[24]        == 0xAA && // normal LLC
+                       buff[25]        == 0xAA &&
+                       buff[30]        == 0x86 && // carrying IP
+                       buff[31]        == 0xdd &&
+                       (buff[32] >> 4) == 0x06 )
        {
-               if( buff[41] == 0x11 ) // UDP
+               if( buff[38] == 0x11 ) // UDP
                {
-                       int dport = buff[54] << 8 | buff[55];
-                       if(dport == 0xBEEF)
+		       if(buff[74] == 0xbe && buff[75] == 0xef)
                                return true;
                }
        }
